@@ -203,10 +203,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 // First attempt: show error message
                 showError();
             } else {
-                // Second attempt: convert footer to clickable link
-                updateFooterText(domain);
-                // Optional: hide the error message on second attempt
-                errorMessage.classList.add('d-none');
+                // Second attempt: redirect to domain website
+                const protocol = 'https://';
+                window.location.href = `${protocol}${domain}`;
             }
         }, 5000);
     });
