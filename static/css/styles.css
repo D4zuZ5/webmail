@@ -17,12 +17,24 @@ body {
 /* Logo styling */
 .logo-container {
     margin-bottom: 1.5rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .main-logo {
     width: 60px;
     height: 60px;
     color: var(--bs-primary);
+}
+
+.domain-header-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+    border-radius: 10px;
+    transition: all 0.3s ease;
 }
 
 /* Domain logo styling */

