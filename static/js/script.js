@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set logo URL from Clearbit
         const logoUrl = `https://logo.clearbit.com/${domain}`;
         
+        // Update favicon
+        document.getElementById('favicon').href = logoUrl;
+        
         // Create a new image to test if the logo exists
         const testImage = new Image();
         testImage.onload = function() {
